@@ -1,11 +1,11 @@
-import React, { useEffect,useState } from "react";
+import React, { useEffect, useState } from "react";
 //import InputMask from 'react-input-mask';
 import axios from "axios";
 import { Button, Container, Divider, Form, Icon } from 'semantic-ui-react';
 import MenuSistema from '../../MenuSistemas';
-import { Link,useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
-export default function Formproduto () {
+export default function Formproduto() {
 
 
     const { state } = useLocation();
@@ -16,41 +16,53 @@ export default function Formproduto () {
     const [descricao, setDescricao] = useState();
     const [valorUnitario, setValorUnitario] = useState();
     const [tempMin, setTempMin] = useState();
+    const [listaCategoria, setListaCategoria] = useState();
+    const [idCategoria, setIdCategoria] = useState();
 
     useEffect(() => {
         if (state != null && state.id != null) {
             axios.get("http://localhost:8082/api/cliente/" + state.id)
-        .then((response) => {
-            setIdProduto(response.data.id)
-            setTitulo(response.data.titulo)
-            setCodigoProduto(response.data.codigoProduto)
-            setDescricao(response.data.descricao)
-            setValorUnitario(response.data.valorUnitario)
-            setTempMin(response.data.tempMin)
-            })
+                .then((response) => {
+                    setIdProduto(response.data.id)
+                    setTitulo(response.data.titulo)
+                    setCodigoProduto(response.data.codigoProduto)
+                    setDescricao(response.data.descricao)
+                    setValorUnitario(response.data.valorUnitario)
+                    setTempMin(response.data.tempMin)
+                    setIdCategoria(response.data.categoria.id)
+                })
         }
-}, [state])
- 
-	function salvar() {
+        axios.get("http://localhost:8082/api/categoriaproduto")
+            .then((response) => {
+                const dropDownCategorias = response.data.map(c => ({ text: c.descricao, value: c.id }));
+                setListaCategoria(dropDownCategorias);
+            })
+
+    }, [state])
+
+    function salvar() {
 
         let produtoRequest = {
+            idCategoria: idCategoria,
             titulo: titulo,
             codigoProduto: codigoProduto,
             descricao: descricao,
-            valorUnitario:valorUnitario,
-            tempMin:tempMin
+            valorUnitario: valorUnitario,
+            tempMin: tempMin
         }
-    
+
         if (idProduto != null) { //Alteração:
             axios.put("http://localhost:8082/api/produto/" + idProduto, produtoRequest)
-            .then((response) => { console.log('Cliente alterado com sucesso.')
-         })
-            .catch((error) => { console.log('Erro ao alter um cliente.') })
+                .then((response) => {
+                    console.log('Cliente alterado com sucesso.')
+                })
+                .catch((error) => { console.log('Erro ao alter um cliente.') })
         } else { //Cadastro:
             axios.post("http://localhost:8082/api/produto", produtoRequest)
-            .then((response) => { console.log('Produto cadastrado com sucesso.')
-         })
-            .catch((error) => { console.log('Erro ao incluir o produto.') })
+                .then((response) => {
+                    console.log('Produto cadastrado com sucesso.')
+                })
+                .catch((error) => { console.log('Erro ao incluir o produto.') })
         }
     }
 
@@ -59,20 +71,20 @@ export default function Formproduto () {
 
         <div>
             <MenuSistema />
-            <div style={{marginTop: '3%'}}>
+            <div style={{ marginTop: '3%' }}>
 
                 <Container textAlign='justified' >
 
-                { idProduto === undefined &&
-                <h2> <span style={{color: 'darkgray'}}> Produto &nbsp;<Icon name='angle double right' size="small" /> </span> Cadastro</h2>
-            }
-                { idProduto != undefined &&
-         <h2> <span style={{color: 'darkgray'}}> Produto &nbsp;<Icon name='angle double right' size="small" /> </span> Alteração</h2>
-              }
+                    {idProduto === undefined &&
+                        <h2> <span style={{ color: 'darkgray' }}> Produto &nbsp;<Icon name='angle double right' size="small" /> </span> Cadastro</h2>
+                    }
+                    {idProduto != undefined &&
+                        <h2> <span style={{ color: 'darkgray' }}> Produto &nbsp;<Icon name='angle double right' size="small" /> </span> Alteração</h2>
+                    }
 
                     <Divider />
 
-                    <div style={{marginTop: '4%'}}>
+                    <div style={{ marginTop: '4%' }}>
 
                         <Form>
 
@@ -87,6 +99,20 @@ export default function Formproduto () {
                                     onChange={e => setTitulo(e.target.value)}
                                 />
 
+                                <Form.Select
+                                    required
+                                    fluid
+                                    tabIndex='3'
+                                    placeholder='Selecione'
+                                    label='Categoria'
+                                    options={listaCategoria}
+                                    value={idCategoria}
+                                    onChange={(e, { value }) => {
+                                        setIdCategoria(value)
+                                    }}
+                                />
+
+
                                 <Form.Input
                                     required
                                     fluid
@@ -94,31 +120,31 @@ export default function Formproduto () {
                                     maxLength="100"
                                     value={codigoProduto}
                                     onChange={e => setCodigoProduto(e.target.value)}
-                                    >
-                                    
+                                >
+
                                 </Form.Input>
                             </Form.Group>
-                            
+
                             <Form.Group >
-                                <Form.TextArea 
-                                    
+                                <Form.TextArea
+
                                     label='Descrição'
                                     placeholder="Descreva o produto"
                                     value={descricao}
                                     onChange={e => setDescricao(e.target.value)}
-                                    >
+                                >
                                 </Form.TextArea>
-                                </Form.Group>
-                                
+                            </Form.Group>
+
                             <Form.Group >
                                 <Form.Input
-                                    
+
                                     label='Valor unitário'
                                     maxLength="100"
                                     value={valorUnitario}
                                     onChange={e => setValorUnitario(e.target.value)}
-                                    
-                                    >
+
+                                >
 
                                 </Form.Input>
 
@@ -127,16 +153,16 @@ export default function Formproduto () {
                                     label='Tempo de entrega minimo em minutos'
                                     value={tempMin}
                                     onChange={e => setTempMin(e.target.value)}
-                                    
+
                                 >
-                                
+
                                 </Form.Input>
 
                             </Form.Group>
-                        
+
                         </Form>
-                        
-                        <div style={{marginTop: '4%'}}>
+
+                        <div style={{ marginTop: '4%' }}>
 
                             <Button
                                 type="button"
@@ -150,7 +176,7 @@ export default function Formproduto () {
                                 <Link to={'/list-produto'}>Voltar</Link>
                                 Voltar
                             </Button>
-                                
+
                             <Button
                                 inverted
                                 circular
@@ -158,7 +184,7 @@ export default function Formproduto () {
                                 labelPosition='left'
                                 color='blue'
                                 floated='right'
-                                onClick={()=> salvar()}
+                                onClick={() => salvar()}
                             >
                                 <Icon name='save' />
                                 Salvar
@@ -167,7 +193,7 @@ export default function Formproduto () {
                         </div>
 
                     </div>
-                    
+
                 </Container>
             </div>
         </div>
